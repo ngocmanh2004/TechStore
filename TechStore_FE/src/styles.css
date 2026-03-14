@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+	--bg: #f4f7fb;
+	--surface: #ffffff;
+	--surface-soft: #f7f9fc;
+	--text: #0f172a;
+	--text-muted: #64748b;
+	--primary: #0f62fe;
+	--primary-strong: #0043ce;
+	--success: #0f9d58;
+	--danger: #dc2626;
+	--border: #e2e8f0;
+	--shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.06);
+	--shadow-md: 0 16px 38px rgba(15, 23, 42, 0.08);
+	--radius-sm: 10px;
+	--radius-md: 16px;
+	--radius-lg: 24px;
+	--container: 1240px;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'Manrope', 'Segoe UI', sans-serif;
+	background:
+		radial-gradient(1200px 400px at 90% -20%, rgba(15, 98, 254, 0.08), transparent 60%),
+		radial-gradient(1000px 300px at -10% 10%, rgba(15, 157, 88, 0.06), transparent 60%),
+		var(--bg);
+	color: var(--text);
+}
+
+a {
+	color: inherit;
+}
+
+img {
+	max-width: 100%;
+}
+
+.ui-container {
+	width: min(var(--container), calc(100% - 32px));
+	margin: 0 auto;
+}
+
+.ui-card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-sm);
+}
+
+button,
+.btn,
+input,
+select,
+textarea {
+	font-family: inherit;
+}
+
+button,
+.btn {
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+	outline: 3px solid rgba(15, 98, 254, 0.28);
+	outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--text);
+}
+
+.btn-primary,
+.btn.btn-primary {
+	background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+	color: #fff;
+	border: none;
+	box-shadow: 0 10px 20px rgba(15, 98, 254, 0.24);
+}
+
+.btn-primary:hover,
+.btn.btn-primary:hover {
+	transform: translateY(-1px);
+}
+
+.btn-secondary,
+.btn.btn-secondary {
+	background: #eef2ff;
+	border-color: #c7d2fe;
+	color: #1e3a8a;
+}
+
+.btn-danger,
+.btn.btn-danger {
+	background: #fef2f2;
+	border-color: #fecaca;
+	color: #991b1b;
+}
+
+@media (max-width: 768px) {
+	.ui-container {
+		width: calc(100% - 20px);
+	}
+}
+

@@ -1,0 +1,225 @@
+<div class="outer-container ui-container">
+  <section class="listing-hero">
+    <div>
+      <p class="listing-eyebrow">San pham noi bat</p>
+      <h1>Smartphone, laptop va tablet cho phong cach song hien dai</h1>
+      <p>Loc nhanh theo thuong hieu va khoang gia de tim thiet bi phu hop.</p>
+    </div>
+    <div class="listing-filters">
+      <label>
+        Thuong hieu
+        <select [(ngModel)]="selectedBrandId" (change)="applyFilters()">
+          <option value="">Tat ca</option>
+          <option *ngFor="let brand of allBrands" [value]="brand.brand_id">{{ brand.brand_name }}</option>
+        </select>
+      </label>
+      <label>
+        Gia
+        <select [(ngModel)]="selectedPriceRange" (change)="applyFilters()">
+          <option value="">Tat ca</option>
+          <option value="under10">Duoi 10 trieu</option>
+          <option value="10to20">10 - 20 trieu</option>
+          <option value="above20">Tren 20 trieu</option>
+        </select>
+      </label>
+      <button class="btn-clear" type="button" (click)="resetFilters()">Xoa loc</button>
+    </div>
+  </section>
+
+  <div *ngFor="let group of productGroups" class="category-section">
+    <div class="category-header">
+      <h2 class="category-title">{{ group.category_name | uppercase }} NỔI BẬT</h2>
+      <div class="brand-list">
+        <a *ngFor="let brand of group.brands"
+          [routerLink]="['/home/product/category', group.category_id, 'brand', brand.brand_id]">
+          {{ brand.brand_name }}
+        </a>
+      </div>
+      <a [routerLink]="['/home/product/category', group.category_id]" class="view-all-link">
+        Xem tất cả <i class="fa fa-chevron-right"></i>
+      </a>
+    </div>
+
+    <div class="product-carousel">
+      <button class="carousel-button prev" (click)="navigateCarousel(group, 'prev')"
+        [disabled]="group.currentIndex === 0 && group.products.length <= group.productsPerView"
+        aria-label="Previous">
+        <i class="fa fa-chevron-left"></i>
+      </button>
+
+      <div class="product-track-container">
+        <div class="product-track">
+          <div class="product-item" *ngFor="let product of group.visibleProducts">
+            <div class="product-image">
+              <a [routerLink]="['/home/product/detail/', product.product_id]">
+                <img [src]="product.PathAnh" 
+                     [alt]="product.product_name"
+                     loading="lazy"
+                     (error)="product.PathAnh = 'assets/images/default-product.png'" />
+              </a>
+            </div>
+            <div class="product-details">
+              <p class="p1">{{ product.product_name }}</p>
+              <p class="p2">
+                {{ product.price | number:'1.0-0' }}
+                <span class="currency-unit">đ</span>
+              </p>
+            </div>
+            <div class="product-actions">
+              <button class="btn-buy-now" type="button" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#exampleModal"
+                      (click)="themDon(product)">
+                <i class="fa fa-bolt"></i> Mua ngay
+              </button>
+              <button class="btn-add-to-cart" (click)="addToCart(product)">
+                <i class="fa fa-shopping-cart"></i> Thêm vào giỏ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="carousel-button next" (click)="navigateCarousel(group, 'next')"
+        [disabled]="false"
+        aria-label="Next">
+        <i class="fa fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="productGroups.length === 0" class="no-products-message">
+    <i class="fa fa-search" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+    <p>Không có sản phẩm nào để hiển thị.</p>
+  </div>
+</div>
+
+<!-- Modal Thanh toán -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+  *ngIf="userService.getCurrentUser() && dangThemSua">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">
+          <i class="fa fa-credit-card"></i> Thanh toán đơn hàng
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" (click)="dong()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Success Message -->
+        <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
+          <i class="fa fa-check-circle" style="font-size: 32px; margin-bottom: 8px;"></i>
+          <p style="margin: 0; font-weight: 600;">Đặt hàng thành công!</p>
+          <small>Vui lòng chờ...</small>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage && dangThemSua" class="alert alert-danger">
+          <i class="fa fa-exclamation-circle"></i> {{ errorMessage }}
+        </div>
+
+        <!-- Banking Info -->
+        <div *ngIf="bankInfo && transferInstructions" class="alert alert-info text-center">
+          <h5><i class="fa fa-university"></i> Hướng dẫn chuyển khoản</h5>
+          <p>Quét mã QR và nhập thông tin:</p>
+          <img [src]="qrCodeUrl" 
+               style="width: 200px; height: 200px; display: block; margin: 16px auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
+               (error)="qrCodeUrl = 'assets/images/default-image.jpg'" />
+          <pre style="background: white; padding: 16px; border-radius: 8px; text-align: left;">{{ bankInfo }}</pre>
+          <p style="color: #856404;">{{ transferInstructions }}</p>
+          <button class="btn btn-primary mt-3" (click)="confirmTransfer()">
+            <i class="fa fa-check"></i> Đã chuyển khoản
+          </button>
+        </div>
+
+        <!-- Product Table -->
+        <div *ngIf="selectedItem && !showSuccessMessage && !bankInfo; else noSelection">
+          <table class="table table-borderless">
+            <thead>
+              <tr>
+                <th>Hình ảnh</th>
+                <th>Sản phẩm</th>
+                <th>Số lượng</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <img [src]="selectedItem.PathAnh" width="60" style="border-radius: 8px;"
+                    (error)="selectedItem.PathAnh = 'assets/images/default-image.jpg'" />
+                </td>
+                <td style="font-weight: 600;">{{ selectedItem.product.product_name }}</td>
+                <td>
+                  <input type="number" class="form-control" style="width: 80px;" 
+                         [(ngModel)]="selectedItem.quantity" min="1"
+                         (ngModelChange)="selectedItem.total_amount = selectedItem.price * selectedItem.quantity" />
+                </td>
+                <td>{{ selectedItem.price | number:'1.0-0' }}đ</td>
+                <td style="font-weight: 700; color: #d70018;">{{ selectedItem.total_amount | number:'1.0-0' }}đ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noSelection>
+          <p class="text-center text-muted" *ngIf="!showSuccessMessage && !bankInfo">
+            Vui lòng chọn sản phẩm để thanh toán.
+          </p>
+        </ng-template>
+
+        <!-- Payment Form -->
+        <form #paymentForm="ngForm" *ngIf="dangThemSua && !bankInfo && !showSuccessMessage"
+          (ngSubmit)="muaNgay(paymentForm)">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="fullname" class="form-label">Họ tên</label>
+              <input type="text" id="fullname" name="fullname" class="form-control" 
+                     placeholder="Nguyễn Văn A"
+                     ngModel required pattern="[A-Za-zÀ-ỹ\s]+" />
+              <div *ngIf="paymentForm.controls['fullname']?.touched && paymentForm.controls['fullname']?.invalid"
+                class="text-danger small mt-1">
+                <i class="fa fa-exclamation-circle"></i> Họ tên chỉ chứa chữ cái
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="phone" class="form-label">Số điện thoại</label>
+              <input type="text" id="phone" name="phone" class="form-control" 
+                     placeholder="0901234567"
+                     ngModel required pattern="[0-9]{10}" />
+              <div *ngIf="paymentForm.controls['phone']?.touched && paymentForm.controls['phone']?.invalid"
+                class="text-danger small mt-1">
+                <i class="fa fa-exclamation-circle"></i> Nhập đúng 10 chữ số
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Địa chỉ giao hàng</label>
+            <input type="text" id="address" name="address" class="form-control" 
+                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                   ngModel required minlength="5" />
+            <div *ngIf="paymentForm.controls['address']?.touched && paymentForm.controls['address']?.invalid"
+              class="text-danger small mt-1">
+              <i class="fa fa-exclamation-circle"></i> Địa chỉ ít nhất 5 ký tự
+            </div>
+          </div>
+          <div class="mb-4">
+            <label for="payment" class="form-label">Phương thức thanh toán</label>
+            <select id="payment" name="payment" class="form-select" ngModel required>
+              <option value="COD">💵 Thanh toán khi nhận hàng (COD)</option>
+              <option value="Banking">🏦 Chuyển khoản ngân hàng</option>
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1" [disabled]="!paymentForm.valid">
+              <i class="fa fa-check"></i> Xác nhận đặt hàng
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="dong()">
+              Hủy
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,213 @@
+<nav class="breadcrumb ui-container">
+  <a class="breadcrumb-link" [routerLink]="['/home/list']" [routerLinkActive]="'active-link'">Trang Chu</a>
+  <span> / </span>
+  <label>Chi tiet <strong>{{product.product_name}}</strong></label>
+</nav>
+
+<div class="product-detail-container ui-container">
+  <div class="product-image-container">
+    <div class="gallery-main">
+      <img [src]="product.PathAnh" alt="{{ product.product_name }}" class="product-image">
+    </div>
+    <div class="gallery-thumbs">
+      <img [src]="product.PathAnh" alt="thumb" class="thumb active" />
+      <img [src]="product.PathAnh" alt="thumb" class="thumb" />
+      <img [src]="product.PathAnh" alt="thumb" class="thumb" />
+    </div>
+  </div>
+
+  <div class="product-info">
+    <h1 class="product-title">{{ product.product_name }}</h1>
+    <div class="price-row">
+      <p class="product-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
+      <span class="stock-chip">Con hang</span>
+    </div>
+
+    <div class="product-actions">
+      <button class="btn-add-to-cart" (click)="addToCart()">Them vao gio <i class="fa fa-shopping-cart"></i></button>
+      <button type="button" class="btn-buy-now" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="themDon()">Mua ngay</button>
+    </div>
+
+    <div class="product-description">
+      <h3>Mo ta san pham</h3>
+      {{product.description}}
+    </div>
+
+    <div class="product-specs">
+      <h3>Thong so ky thuat</h3>
+      <ul>
+        <li><strong>Man hinh:</strong> Super Retina XDR 6.7 inch, 120Hz</li>
+        <li><strong>Chip:</strong> Apple A17 Pro</li>
+        <li><strong>RAM:</strong> 8GB</li>
+        <li><strong>Bo nho:</strong> 128GB / 256GB / 512GB / 1TB</li>
+        <li><strong>Camera:</strong> 48MP + 12MP + 12MP / Truoc: 12MP</li>
+        <li><em>Can tu van them? Hay mo Chatbot de nhan thong tin chi tiet.</em></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Thanh toán -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+  *ngIf="userService.getCurrentUser() && dangThemSua">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Thanh toán đơn hàng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" (click)="dong()"></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
+          Đặt hàng thành công! <br> Vui lòng chờ...
+        </div>
+
+        <div *ngIf="errorMessage && dangThemSua" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="bankInfo && transferInstructions" class="alert alert-info text-center">
+          <h5>Hướng dẫn chuyển khoản</h5>
+          <p>Quét mã QR, nhập thông tin chuyển khoản:</p>
+          <img [src]="qrCodeUrl" style="width: 250px; height: 250px; display: block; margin: 0 auto;"
+            (error)="qrCodeUrl = 'assets/images/default-image.jpg'; errorMessage = 'Không thể tải mã QR!'" />
+          <pre class="mt-3">{{ bankInfo }}</pre>
+          <p>{{ transferInstructions }}</p>
+          <button class="btn btn-primary mt-3" (click)="confirmTransfer()">Đã hiểu</button>
+        </div>
+
+        <div *ngIf="selectedItem && !showSuccessMessage && !bankInfo; else noSelection">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Hình ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Số lượng</th>
+                <th>Giá</th>
+                <th>Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><img [src]="selectedItem.PathAnh" width="50"
+                    (error)="selectedItem.PathAnh = 'assets/images/default-image.jpg'" /></td>
+                <td>{{ selectedItem.product.product_name }}</td>
+                <td>
+                  <input type="number" [(ngModel)]="selectedItem.quantity" min="1"
+                    (change)="selectedItem.total_amount = selectedItem.price * selectedItem.quantity" />
+                </td>
+                <td>{{ selectedItem.price | currency:'VND' }}</td>
+                <td>{{ selectedItem.total_amount | currency:'VND' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noSelection>
+          <p>Vui lòng chọn một sản phẩm để thanh toán.</p>
+        </ng-template>
+
+        <form #paymentForm="ngForm" *ngIf="dangThemSua && !bankInfo && !showSuccessMessage"
+          (ngSubmit)="muaNgay(paymentForm)">
+          <div class="mb-3">
+            <label for="fullname" class="form-label">Họ tên:</label>
+            <input type="text" id="fullname" name="fullname" class="form-control" ngModel required
+              pattern="[A-Za-zÀ-ỹ\s]+" />
+            <div *ngIf="paymentForm.controls['fullname']?.touched && paymentForm.controls['fullname']?.invalid"
+              class="text-danger">
+              Họ tên chỉ chứa chữ cái và khoảng trắng.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Địa chỉ:</label>
+            <input type="text" id="address" name="address" class="form-control" ngModel required minlength="5" />
+            <div *ngIf="paymentForm.controls['address']?.touched && paymentForm.controls['address']?.invalid"
+              class="text-danger">
+              Địa chỉ ít nhất 5 ký tự.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Số điện thoại:</label>
+            <input type="text" id="phone" name="phone" class="form-control" ngModel required pattern="[0-9]{10}" />
+            <div *ngIf="paymentForm.controls['phone']?.touched && paymentForm.controls['phone']?.invalid"
+              class="text-danger">
+              Số điện thoại phải 10 chữ số.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="payment" class="form-label">Phương thức thanh toán:</label>
+            <select id="payment" name="payment" class="form-select" ngModel required>
+              <option value="COD">Thanh toán khi nhận hàng</option>
+              <option value="Banking">Chuyển khoản</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="!paymentForm.valid">Xác nhận</button>
+          <button type="button" class="btn btn-secondary ms-2" (click)="dong()">Hủy</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Đánh giá sản phẩm -->
+<div class="review-container ui-container">
+  <h4>Danh gia san pham</h4>
+  <div class="review-form">
+    <textarea [(ngModel)]="newReview" placeholder="Hay de lai binh luan tai day"></textarea>
+    <div class="rating">
+      <label>Rating:</label>
+      <select [(ngModel)]="rating">
+        <option *ngFor="let star of [1, 2, 3, 4, 5]" [value]="star">{{ star }} ★</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" (click)="submitReview()">Gửi</button>
+  </div>
+
+  <div class="review-item" *ngFor="let r of reviews">
+    <p><strong><i class="fas fa-user"></i> {{ r.username }}</strong></p>
+    <p>Đánh giá: {{ r.rating }} ⭐</p>
+    <p>{{ r.content }}</p>
+    <p class="review-time">🕒 {{ r.create_at | date:'HH:mm dd/MM/yyyy' }}</p>
+
+
+    <button *ngIf="r.user_id === currentUserId || isAdmin" type="button" class="btn btn-sm btn-danger"
+      data-bs-toggle="modal" data-bs-target="#addModal" (click)="editReview(r)">
+      <i class="fas fa-pen"></i>
+    </button>
+    <button *ngIf="r.user_id === currentUserId || isAdmin" type="button" class="btn btn-sm btn-warning ms-2"
+      (click)="deleteReview(r.id)">
+      <i class="fas fa-trash"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Modal sửa đánh giá -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form *ngIf="selectedReview" (ngSubmit)="suaReview()" #editReviewForm="ngForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Sửa đánh giá</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nội dung</label>
+            <input type="text" class="form-control" [(ngModel)]="contenReview" name="Content" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <select class="form-control" [(ngModel)]="ratingReview" name="Rating" required>
+              <option *ngFor="let star of [1,2,3,4,5]" [value]="star">{{ star }} ★</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" [disabled]="!editReviewForm.form.valid" (click)="suaReview()"
+            data-bs-dismiss="modal">
+            Cập nhật
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
