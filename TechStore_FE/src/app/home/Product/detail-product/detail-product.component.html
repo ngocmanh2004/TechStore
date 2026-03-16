@@ -7,12 +7,16 @@
 <div class="product-detail-container ui-container">
   <div class="product-image-container">
     <div class="gallery-main">
-      <img [src]="product.PathAnh" alt="{{ product.product_name }}" class="product-image">
+      <img [src]="selectedImage" alt="{{ product.product_name }}" class="product-image">
     </div>
     <div class="gallery-thumbs">
-      <img [src]="product.PathAnh" alt="thumb" class="thumb active" />
-      <img [src]="product.PathAnh" alt="thumb" class="thumb" />
-      <img [src]="product.PathAnh" alt="thumb" class="thumb" />
+      <img [src]="product.PathAnh" alt="thumb" class="thumb"
+           [class.active]="selectedImage === product.PathAnh"
+           (click)="selectedImage = product.PathAnh" />
+      <img [src]="product.PathAnh" alt="thumb" class="thumb"
+           (click)="selectedImage = product.PathAnh" />
+      <img [src]="product.PathAnh" alt="thumb" class="thumb"
+           (click)="selectedImage = product.PathAnh" />
     </div>
   </div>
 
@@ -20,28 +24,28 @@
     <h1 class="product-title">{{ product.product_name }}</h1>
     <div class="price-row">
       <p class="product-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
-      <span class="stock-chip">Con hang</span>
+      <span class="stock-chip">Còn hàng</span>
     </div>
 
     <div class="product-actions">
-      <button class="btn-add-to-cart" (click)="addToCart()">Them vao gio <i class="fa fa-shopping-cart"></i></button>
+      <button class="btn-add-to-cart" (click)="addToCart()">Thêm vào giỏ <i class="fa fa-shopping-cart"></i></button>
       <button type="button" class="btn-buy-now" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="themDon()">Mua ngay</button>
     </div>
 
     <div class="product-description">
-      <h3>Mo ta san pham</h3>
+      <h3>Mô tả sản phẩm</h3>
       {{product.description}}
     </div>
 
     <div class="product-specs">
-      <h3>Thong so ky thuat</h3>
+      <h3>Thông số kỹ thuật</h3>
       <ul>
-        <li><strong>Man hinh:</strong> Super Retina XDR 6.7 inch, 120Hz</li>
+        <li><strong>Màn hình:</strong> Super Retina XDR 6.7 inch, 120Hz</li>
         <li><strong>Chip:</strong> Apple A17 Pro</li>
         <li><strong>RAM:</strong> 8GB</li>
-        <li><strong>Bo nho:</strong> 128GB / 256GB / 512GB / 1TB</li>
-        <li><strong>Camera:</strong> 48MP + 12MP + 12MP / Truoc: 12MP</li>
-        <li><em>Can tu van them? Hay mo Chatbot de nhan thong tin chi tiet.</em></li>
+        <li><strong>Bộ nhớ:</strong> 128GB / 256GB / 512GB / 1TB</li>
+        <li><strong>Camera:</strong> 48MP + 12MP + 12MP / Trước: 12MP</li>
+        <li><em>Cần tư vấn thêm? Hãy mở Chatbot để nhận thông tin chi tiết.</em></li>
       </ul>
     </div>
   </div>
@@ -149,33 +153,52 @@
 
 <!-- Đánh giá sản phẩm -->
 <div class="review-container ui-container">
-  <h4>Danh gia san pham</h4>
+  <h4><i class="fa fa-star" style="color: #fbbf24;"></i> Đánh giá sản phẩm</h4>
+
+  <!-- Review form -->
   <div class="review-form">
-    <textarea [(ngModel)]="newReview" placeholder="Hay de lai binh luan tai day"></textarea>
-    <div class="rating">
-      <label>Rating:</label>
-      <select [(ngModel)]="rating">
-        <option *ngFor="let star of [1, 2, 3, 4, 5]" [value]="star">{{ star }} ★</option>
-      </select>
+    <textarea [(ngModel)]="newReview" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."></textarea>
+    <div class="review-form-footer">
+      <div class="rating">
+        <label>Xếp hạng:&nbsp;</label>
+        <select [(ngModel)]="rating">
+          <option *ngFor="let star of [1, 2, 3, 4, 5]" [value]="star">{{ star }} ★</option>
+        </select>
+      </div>
+      <button class="btn btn-primary review-submit-btn" (click)="submitReview()">
+        <i class="fa fa-paper-plane"></i> Gửi đánh giá
+      </button>
     </div>
-    <button class="btn btn-primary" (click)="submitReview()">Gửi</button>
   </div>
 
+  <!-- Review list -->
   <div class="review-item" *ngFor="let r of reviews">
-    <p><strong><i class="fas fa-user"></i> {{ r.username }}</strong></p>
-    <p>Đánh giá: {{ r.rating }} ⭐</p>
-    <p>{{ r.content }}</p>
-    <p class="review-time">🕒 {{ r.create_at | date:'HH:mm dd/MM/yyyy' }}</p>
+    <div class="review-header">
+      <div class="reviewer-avatar">{{ r.username?.charAt(0)?.toUpperCase() }}</div>
+      <div class="reviewer-info">
+        <strong class="reviewer-name">{{ r.username }}</strong>
+        <div class="stars">
+          <i *ngFor="let s of [1,2,3,4,5]" class="fa fa-star" [class.star-empty]="s > r.rating"></i>
+        </div>
+      </div>
+      <span class="review-time"><i class="fa fa-clock"></i> {{ r.create_at | date:'HH:mm dd/MM/yyyy' }}</span>
+    </div>
+    <p class="review-content">{{ r.content }}</p>
+    <div class="review-actions" *ngIf="r.user_id === currentUserId || isAdmin">
+      <button type="button" class="btn btn-sm btn-outline-primary"
+        data-bs-toggle="modal" data-bs-target="#addModal" (click)="editReview(r)">
+        <i class="fas fa-pen"></i> Sửa
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-danger ms-2"
+        (click)="deleteReview(r.id)">
+        <i class="fas fa-trash"></i> Xóa
+      </button>
+    </div>
+  </div>
 
-
-    <button *ngIf="r.user_id === currentUserId || isAdmin" type="button" class="btn btn-sm btn-danger"
-      data-bs-toggle="modal" data-bs-target="#addModal" (click)="editReview(r)">
-      <i class="fas fa-pen"></i>
-    </button>
-    <button *ngIf="r.user_id === currentUserId || isAdmin" type="button" class="btn btn-sm btn-warning ms-2"
-      (click)="deleteReview(r.id)">
-      <i class="fas fa-trash"></i>
-    </button>
+  <div *ngIf="reviews.length === 0" class="no-reviews">
+    <i class="fa fa-comment-dots"></i>
+    <p>Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!</p>
   </div>
 </div>
 

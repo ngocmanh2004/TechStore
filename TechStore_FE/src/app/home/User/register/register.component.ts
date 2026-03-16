@@ -25,8 +25,7 @@ export class RegisterComponent implements OnInit {
   }
 
   isStrongPassword(pw: string): boolean {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-])[A-Za-z\d@$!%*?&._\-]{8,}$/;
-    return regex.test(pw);
+    return pw.length >= 6;
   }
 
   dangKy() {
@@ -41,7 +40,7 @@ export class RegisterComponent implements OnInit {
     }
 
     if (!this.isStrongPassword(this.password)) {
-      alert('Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
+      alert('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 

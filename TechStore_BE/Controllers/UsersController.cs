@@ -145,6 +145,9 @@ namespace TechStore_BE.Controllers
                 return BadRequest(new { message = "Username already exists" });
             }
 
+            // Hash the password before saving
+            users.password = BCrypt.Net.BCrypt.HashPassword(users.password);
+
             _context.Users.Add(users);
             await _context.SaveChangesAsync();
 
@@ -180,7 +183,7 @@ namespace TechStore_BE.Controllers
 
             // Check if the user exists in the database
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.username == loginRequest.Username && u.password == loginRequest.Password);
+                .FirstOrDefaultAsync(u => u.username == loginRequest.Username);
 
             if (user == null)
             {
@@ -192,6 +195,37 @@ namespace TechStore_BE.Controllers
                     User = null
                 };
                 return Unauthorized(response); // Return 401 Unauthorized
+            }
+
+            // Verify password using BCrypt (or fallback to plain text for old accounts)
+            bool isPasswordValid = false;
+            try
+            {
+                isPasswordValid = BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.password);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                // Fallback for plain-text passwords stored before encryption was implemented
+                if (user.password == loginRequest.Password)
+                {
+                    isPasswordValid = true;
+                    // Automatically upgrade the plain-text password to hashed for future logins
+                    user.password = BCrypt.Net.BCrypt.HashPassword(loginRequest.Password);
+                    _context.Entry(user).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            if (!isPasswordValid)
+            {
+                var response = new ResponseModel.LoginResponse
+                {
+                    Success = false,
+                    Message = "Invalid username or password",
+                    Role = string.Empty,
+                    User = null
+                };
+                return Unauthorized(response);
             }
 
 
@@ -244,14 +278,23 @@ namespace TechStore_BE.Controllers
                 return NotFound();
             }
 
-            if (user.password != request.CurrentPassword)
+            bool isCurrentPasswordValid = false;
+            try
             {
-                // return Unauthorized("Current password is incorrect.");
+                isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.password);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                isCurrentPasswordValid = user.password == request.CurrentPassword;
+            }
+
+            if (!isCurrentPasswordValid)
+            {
                 return Unauthorized(new { message = "Current password is incorrect." });
             }
 
-            // Cập nhật mật khẩu mới
-            user.password = request.NewPassword;
+            // Cập nhật mật khẩu mới và mã hóa
+            user.password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 
             _context.Entry(user).State = EntityState.Modified;
 

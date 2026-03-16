@@ -1,18 +1,18 @@
 <nav class="breadcrumb ui-container">
-  <a class="breadcrumb-link" [routerLink]="['/home/list']">Trang Chu</a>
-  <label> / Gio hang</label>
+  <a class="breadcrumb-link" [routerLink]="['/home/list']">Trang Chủ</a>
+  <label> / Giỏ hàng</label>
 </nav>
 
 <div class="shopping-cart ui-container">
   <div class="title">
-    <h1>Gio hang cua ban</h1>
-    <button [routerLink]="['/home/user/viewOH', user_id]" class="btn btn-secondary">Lich su mua hang</button>
+    <h1>Giỏ hàng của bạn</h1>
+    <button [routerLink]="['/home/user/viewOH', user_id]" class="btn btn-secondary">Lịch sử mua hàng</button>
   </div>
 
   <div *ngIf="errorMessage && !dangThemSua" class="alert alert-danger">{{ errorMessage }}</div>
 
   <div class="select-all" *ngIf="cartItems.length > 0">
-    <input type="checkbox" (change)="toggleSelectAll($event)" /> Chon tat ca
+    <input type="checkbox" (change)="toggleSelectAll($event)" /> Chọn tất cả
   </div>
 
   <div *ngIf="cartItems.length > 0; else emptyCart" class="cart-layout">
@@ -33,16 +33,16 @@
         </div>
         <div class="item-total">
           <p>{{ item.product.price * item.quantity | currency: 'VND' }}</p>
-          <button class="btn btn-danger" (click)="confirmDelete(i)">Xoa</button>
+          <button class="btn btn-danger" (click)="confirmDelete(i)">Xóa</button>
         </div>
       </article>
     </div>
 
     <aside class="checkout-panel">
-      <h3>Tong don hang</h3>
-      <p>Tong tien tam tinh</p>
+      <h3>Tổng đơn hàng</h3>
+      <p>Tổng tiền tạm tính</p>
       <h2>{{ totalAmount | currency: 'VND' }}</h2>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="themDon()">Thanh toan ngay</button>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="themDon()">Thanh toán ngay</button>
     </aside>
 
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel">
@@ -130,6 +130,13 @@
     </div>
   </div>
   <ng-template #emptyCart>
-    <p>Giỏ hàng trống.</p>
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fa fa-shopping-cart"></i></div>
+      <h3>Giỏ hàng của bạn đang trống</h3>
+      <p>Hãy khám phá các sản phẩm tuyệt vời của chúng tôi và thêm vào giỏ hàng!</p>
+      <a [routerLink]="['/home/list']" class="btn btn-primary">
+        <i class="fa fa-arrow-left"></i>&nbsp; Tiếp tục mua sắm
+      </a>
+    </div>
   </ng-template>
 </div>

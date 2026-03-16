@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   OnInit,
   OnDestroy,
@@ -17,13 +17,6 @@ import { filter, Subscription } from 'rxjs';
 
 declare var bootstrap: any;
 
-const MOCK_CATEGORIES: Categories[] = [
-  { category_id: 1, category_name: 'Điện Thoại' },
-  { category_id: 2, category_name: 'Laptop' },
-  { category_id: 3, category_name: 'Máy Tính Bảng' },
-  { category_id: 4, category_name: 'Phụ Kiện' },
-];
-
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -37,7 +30,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
   isAdmin: boolean = false;
   showMap: boolean = false;
-  storeAddress: string = '138 Cần Vương, Nguyễn Văn Cừ, Quy Nhơn, Bình Định';
+  storeAddress: string = '138 Cáº§n VÆ°Æ¡ng, Nguyá»…n VÄƒn Cá»«, Quy NhÆ¡n, BÃ¬nh Äá»‹nh';
 
   banners: string[] = [
     'assets/img/slide1.jpg',
@@ -125,7 +118,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   DsDanhMucSp() {
-    this.DsDM = MOCK_CATEGORIES;
+    this.categoryService.getCategory().subscribe({
+      next: (data: Categories[]) => {
+        this.DsDM = data ?? [];
+      },
+      error: () => {
+        this.DsDM = [];
+      }
+    });
   }
 
   logout() {
@@ -140,7 +140,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         queryParams: { search: this.searchText },
       });
     } else {
-      alert('Vui lòng nhập từ khóa tìm kiếm!');
+      alert('Vui lÃ²ng nháº­p tá»« khÃ³a tÃ¬m kiáº¿m!');
     }
   }
 
@@ -165,5 +165,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (bootstrapModal) {
       bootstrapModal.hide();
     }
+  }
+
+  /** Maps a category name keyword to a Font Awesome icon class */
+  getCategoryIcon(categoryName: string): string {
+    const n = (categoryName ?? '').toLowerCase();
+    if (n.includes('laptop') || n.includes('x\u00e1ch tay')) return 'fa fa-laptop';
+    if (n.includes('\u0111i\u1ec7n tho\u1ea1i') || n.includes('di \u0111\u1ed9ng') || n.includes('phone')) return 'fa fa-mobile-alt';
+    if (n.includes('tablet') || n.includes('b\u1ea3ng') || n.includes('ipad')) return 'fa fa-tablet-alt';
+    if (n.includes('tai nghe') || n.includes('headphone')) return 'fa fa-headphones';
+    if (n.includes('m\u00e0n h\u00ecnh') || n.includes('monitor')) return 'fa fa-desktop';
+    if (n.includes('m\u00e1y t\u00ednh') || n.includes('desktop') || n.includes('pc')) return 'fa fa-desktop';
+    if (n.includes('camera') || n.includes('m\u00e1y \u1ea3nh')) return 'fa fa-camera';
+    if (n.includes('ph\u1ee5 ki\u1ec7n') || n.includes('accessory')) return 'fa fa-plug';
+    if (n.includes('\u0111\u1ed3ng h\u1ed3') || n.includes('watch')) return 'fa fa-clock';
+    if (n.includes('loa') || n.includes('speaker')) return 'fa fa-volume-up';
+    return 'fa fa-microchip';
   }
 }
